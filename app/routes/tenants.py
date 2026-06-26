@@ -34,12 +34,18 @@ def create_tenant(tenant: TenantCreate, db: Session = Depends(get_db), current_u
     if current_user.role not in ["admin", "landlord"]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    # Create user first if doesn't exist or just mock it
-    # For simplicity, we assume the user exists or we create a skeleton user
-    new_user = User(full_name=tenant.full_name, email=tenant.email, role="tenant")
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    existing_user = db.query(User).filter(User.email == tenant.email).first()
+    if existing_user:
+        existing_user.full_name = tenant.full_name
+        existing_user.role = "tenant"
+        db.commit()
+        db.refresh(existing_user)
+        new_user = existing_user
+    else:
+        new_user = User(full_name=tenant.full_name, email=tenant.email, role="tenant")
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
 
     db_tenant = Tenant(
         user_id=new_user.id,
