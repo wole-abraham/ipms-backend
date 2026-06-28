@@ -28,3 +28,7 @@ app.include_router(predictions.router, prefix="/api/predict", tags=["Predictions
 @app.get("/")
 def read_root():
     return {"message": "Welcome to Intelligent Property Management System API"}
+
+@app.api_route("/health", methods=["GET", "HEAD"])
+def health():
+    return {"status": "ok"}
